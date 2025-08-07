@@ -39,7 +39,7 @@
 #include <SdFat.h>
 #include <setjmp.h>
 
-#define DEBUG            0      // 0:No debug information output
+#define DEBUG            2      // 0:No debug information output
                                 // 1: Debug information output to USB Serial
                                 // 2: Debug information output to LOG.txt (slow)
 
@@ -211,14 +211,14 @@ void readSCSIDeviceConfig(SCSI_DEVICE *dev) {
   LOG_FILE.println(m_ScsiMode);
 
   if( m_ScsiMode == 1 ) {
+    LOG_FILE.println("\tX1turbo mode");
     scsi_command_table[SASI_SPECIFY] = onSpecifyX1turbo;
+    attachInterrupt(RST, onBusResetX1turbo, FALLING);
   }
   if( m_ScsiMode == 2 ) {
+    LOG_FILE.println("\tPC-98 SCSI mode");
     scsi_command_table[SCSI_MODE_SENSE6] =  onModeSensePc98;
     scsi_command_table[SCSI_MODE_SENSE10] = onModeSensePc98;
-  }
-  if(m_ScsiMode == 1 ) {
-    attachInterrupt(RST, onBusResetX1turbo, FALLING);
   }
 
   char x68Msec[4];
@@ -1433,7 +1433,8 @@ byte onModeSense(SCSI_DEVICE *dev, const byte *cdb)
  */
 byte onModeSensePc98(SCSI_DEVICE *dev, const byte *cdb)
 {
-  LOGN("MODE SENSE");
+  LOGN("PC-98 MODE SENSE");
+  
   memset(m_buf, 0, sizeof(m_buf));
   int pageCode = cdb[2] & 0x3F;
   int pageControl = cdb[2] >> 6;
